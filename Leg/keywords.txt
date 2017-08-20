@@ -1,0 +1,9 @@
+
+
+Leg 		KEYWORD1
+setLegAngles	KEYWORD2
+convDegToPulse	KEYWORD2
+setLegInit	KEYWORD2
+calcLegIk	KEYWORD2
+setLegTiming	KEYWORD2
+updateLeg	KEYWORD2
