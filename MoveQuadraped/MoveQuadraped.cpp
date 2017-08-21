@@ -32,7 +32,7 @@ MoveQuadraped::MoveQuadraped()
 		
 
 		if (updateFlag == 1) {
-			LegConstruct[legNr].calcLegIk(xArr[legStepCounter], yArr[legStepCounter], zArr[legStepCounter]);
+			LegConstruct[legNr].legIk(xArr[legStepCounter], yArr[legStepCounter], zArr[legStepCounter]);
 			Serial.print(xArr[legStepCounter]);
 			Serial.print(" : ");
 			Serial.print(yArr[legStepCounter]);
@@ -56,6 +56,14 @@ MoveQuadraped::MoveQuadraped()
 		return stepCounterFlag;
 	}
 	
+	void legIk(int legNr, int xLastPos, int yLastPos, int zLastPos);
+	{
+		
+		xLastPos[legNr] = xLastPos;
+		yLastPos[legNr] = yLastPos;
+		zLastPos[legNr]= zLastPos;
+		LegConstruct[legNr].calcLegIk(xLastPos, yLastPos, zLastPos);
+	}
 	void MoveQuadraped::stepTiming(int stepLen, int stepTime)
 	{
 		
@@ -95,19 +103,19 @@ MoveQuadraped::MoveQuadraped()
 			Serial.println(zLeg[3]);
 
 		if (legRF == 1) {
-			LegConstruct[RIGHT_FRONT].calcLegIk(xLeg[RIGHT_FRONT], yLeg[RIGHT_FRONT], zLeg[RIGHT_FRONT]);
+			LegConstruct[RIGHT_FRONT].legIk(xLeg[RIGHT_FRONT], yLeg[RIGHT_FRONT], zLeg[RIGHT_FRONT]);
 			flagArr[0] = LegConstruct[RIGHT_FRONT].updateLeg();
 		}
 		if (legLF == 1) {
-			LegConstruct[LEFT_FRONT].calcLegIk(xLeg[LEFT_FRONT], yLeg[LEFT_FRONT], zLeg[LEFT_FRONT]);
+			LegConstruct[LEFT_FRONT].legIk(xLeg[LEFT_FRONT], yLeg[LEFT_FRONT], zLeg[LEFT_FRONT]);
 			flagArr[1] = LegConstruct[LEFT_FRONT].updateLeg();
 		}
 		if (legLB == 1) {
-			LegConstruct[LEFT_BACK].calcLegIk(xLeg[LEFT_BACK], yLeg[LEFT_BACK], zLeg[LEFT_BACK]);
+			LegConstruct[LEFT_BACK].legIk(xLeg[LEFT_BACK], yLeg[LEFT_BACK], zLeg[LEFT_BACK]);
 			flagArr[2] = LegConstruct[LEFT_BACK].updateLeg();
 		}
 		if (legRB == 1) {
-			LegConstruct[RIGHT_BACK].calcLegIk(xLeg[RIGHT_BACK], yLeg[RIGHT_BACK], zLeg[RIGHT_BACK]);
+			LegConstruct[RIGHT_BACK].legIk(xLeg[RIGHT_BACK], yLeg[RIGHT_BACK], zLeg[RIGHT_BACK]);
 			flagArr[3] = LegConstruct[RIGHT_BACK].updateLeg();
 		}
 
