@@ -131,11 +131,11 @@ MoveQuadraped::MoveQuadraped()
 	void MoveQuadraped::initialise()
 	{
 		for (int i = 0; i < 4; i++) {
-			LegConstruct[i].setLegInit();      //
+			LegConstruct[i].setLegInit();      //Set Initial parameters
 			legOrientation[i] = 45 + 90 * i;
 			LegConstruct[i].setLegTiming(10, 1);
 			xLeg[i] = X0, yLeg[i] = Y0, zLeg[i] = Z0;
-			
+			xLastPos[i] = 0, yLostPos[i] = 0, zLastPos[i] = 0;
 		}
 
 	}
