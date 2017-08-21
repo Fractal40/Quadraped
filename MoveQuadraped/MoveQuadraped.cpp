@@ -25,21 +25,21 @@ MoveQuadraped::MoveQuadraped()
 	int xArr[stepLen_+1], zArr[stepLen_+1], yArr[stepLen_+1];
 
 		for (int i = 0; i <= stepLen_; i++) {
-			xArr[i] = i * cos((theta_ - legOrientation[legNr]) * 3.14 / 180) + VECTOR_0;
-			zArr[i] = i * sin((theta_ - legOrientation[legNr])*3.14 / 180);
+			xArr[i] = xLastPos[legNr] + (i * cos((theta_ - legOrientation[legNr]) * 3.14 / 180) + VECTOR_0);
+			zArr[i] = yLastPos[legNr] + (i * sin((theta_ - legOrientation[legNr])*3.14 / 180));
 			yArr[i] = Y0 - (-STEPHEIGHT * pow(i, 2) + STEPHEIGHT * stepLen_ * i);
 		}
 		
 
 		if (updateFlag == 1) {
 			LegConstruct[legNr].legIk(xArr[legStepCounter], yArr[legStepCounter], zArr[legStepCounter]);
-			Serial.print(xArr[legStepCounter]);
-			Serial.print(" : ");
-			Serial.print(yArr[legStepCounter]);
-			Serial.print(" : ");
-			Serial.print(zArr[legStepCounter]);
-			Serial.print(" : ");
-			Serial.println(legStepCounter);
+			//Serial.print(xArr[legStepCounter]);
+			//Serial.print(" : ");
+			//Serial.print(yArr[legStepCounter]);
+			//Serial.print(" : ");
+			//Serial.print(zArr[legStepCounter]);
+			//Serial.print(" : ");
+			//Serial.println(legStepCounter);
 			if (legStepCounter < stepLen_) {
 			legStepCounter++;
 			//stepCounterFlag = 0;      //clear step flag
@@ -85,22 +85,22 @@ MoveQuadraped::MoveQuadraped()
 	const int RIGHT_FRONT = 0, LEFT_FRONT = 1, LEFT_BACK = 2, RIGHT_BACK = 3;
 
 		for (int i = 0; i < 4; i++) {
-			xLeg[i] = -1 * (newVector * cos((theta_ - legOrientation[i]) * 3.14 / 180) - VECTOR_0 * cos((legOrientation[i] - legOrientation[i]) * 3.14 / 180));
-			zLeg[i] = -1 * (newVector * sin((theta_ - legOrientation[i]) * 3.14 / 180) - VECTOR_0 * sin((legOrientation[i] - legOrientation[i]) * 3.14 / 180));
-			yLeg[i] = Y0 - elevate_;
+			xLeg[i] = xLastPos[i] + (-1 * (newVector * cos((theta_ - legOrientation[i]) * 3.14 / 180) - VECTOR_0 * cos((legOrientation[i] - legOrientation[i]) * 3.14 / 180)));
+			zLeg[i] = yLastPos[i] + (-1 * (newVector * sin((theta_ - legOrientation[i]) * 3.14 / 180) - VECTOR_0 * sin((legOrientation[i] - legOrientation[i]) * 3.14 / 180)));
+			yLeg[i] = yLastPos[i] + Y0 - elevate_;
 		}
-			Serial.print(newVector);
-			Serial.print(" : ");
-			Serial.print(theta_);
-			Serial.print(" : ");
-			Serial.println(legOrientation[3]);
-			Serial.print(" : ");
-			Serial.print(" : ");
-			Serial.print(xLeg[3]);
-			Serial.print(" : ");
-			Serial.print(yLeg[3]);
-			Serial.print(" : ");
-			Serial.println(zLeg[3]);
+			//Serial.print(newVector);
+			//Serial.print(" : ");
+			//Serial.print(theta_);
+			//Serial.print(" : ");
+			//Serial.println(legOrientation[3]);
+			//Serial.print(" : ");
+			//Serial.print(" : ");
+			//Serial.print(xLeg[3]);
+			//Serial.print(" : ");
+			//Serial.print(yLeg[3]);
+			//Serial.print(" : ");
+			//Serial.println(zLeg[3]);
 
 		if (legRF == 1) {
 			LegConstruct[RIGHT_FRONT].legIk(xLeg[RIGHT_FRONT], yLeg[RIGHT_FRONT], zLeg[RIGHT_FRONT]);
