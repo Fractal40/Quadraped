@@ -56,7 +56,7 @@ MoveQuadraped::MoveQuadraped()
 		return stepCounterFlag;
 	}
 	
-	void legIk(int legNr, int xLastPos, int yLastPos, int zLastPos);
+	void MoveQuadraped::legIk(int legNr, int xLastPos, int yLastPos, int zLastPos);
 	{
 		
 		xLastPos[legNr] = xLastPos;
