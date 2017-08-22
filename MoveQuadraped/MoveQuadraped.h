@@ -21,6 +21,8 @@ class MoveQuadraped
 		
 
 	private:
+		void legIK(int legNr, xLastPos, yLastPos, zLastPos);
+		int xLastPos[4], yLastPos[4], zLastPos[4];
 		int stepTime_ = 500, stepLen_= 30;
 		int legStepCounter = 0, moveSequence = 0, updateFlag = 1;
 		const int VECTOR_0 = 120;

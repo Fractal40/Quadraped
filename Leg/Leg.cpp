@@ -87,11 +87,8 @@ Leg::Leg(int coxaLen, int femurLen, int tibiaLen, int servoNrCoxa, int servoNrFe
 		
 		
 		lastUpdate = millis();
-	  
 
-		
-		
-        for (int servoIndex=0; servoIndex<3; servoIndex++){
+	for (int servoIndex=0; servoIndex<3; servoIndex++){
             if (lastPulse[servoIndex] > pulse[servoIndex]) {
               lastPulse[servoIndex] -= _increment;
               pwm.setPWM(servoNr[servoIndex],0,lastPulse[servoIndex]);
@@ -121,7 +118,37 @@ Leg::Leg(int coxaLen, int femurLen, int tibiaLen, int servoNrCoxa, int servoNrFe
    }    
     
 
-
+int Leg::legStep(int legNr) 
+{ 
+  int stepCounterFlag=0; 
+	
+  stepLen_ = vector_; 
+  const float STEPHEIGHT = 0.1; 
+  int xArr[stepLen_+1], zArr[stepLen_+1], yArr[stepLen_+1];
+  
+  for (int i = 0; i <= stepLen_; i++) {   
+    xArr[i] = xLastPos[legNr] + (i * cos((theta_ - legOrientation[legNr]) * 3.14 / 180) + VECTOR_0);   
+    zArr[i] = yLastPos[legNr] + (i * sin((theta_ - legOrientation[legNr])*3.14 / 180));   
+    yArr[i] = Y0 - (-STEPHEIGHT * pow(i, 2) + STEPHEIGHT * stepLen_ * i);  
+  }  
+  if (updateFlag == 1) {   
+    LegConstruct[legNr].legIk(xArr[legStepCounter], yArr[legStepCounter], zArr[legStepCounter]);   //Serial.print(xArr[legStepCounter]);   //Serial.print(" : ");   //Serial.print(yArr[legStepCounter]);   //Serial.print(" : ");   //Serial.print(zArr[legStepCounter]);   //Serial.print(" : ");   //Serial.println(legStepCounter);   if (legStepCounter < stepLen_) {   legStepCounter++;   //stepCounterFlag = 0;      //clear step flag   } else {   legStepCounter = 0;   stepCounterFlag = 1;     //set step flag   } //end if  }  updateFlag = 0;     //clear step fraction flag  updateFlag = LegConstruct[legNr].updateLeg();   //Serial.print(" : ");   //Serial.println(legStepCounter);
+  return stepCounterFlag; }
 
  
 
+
+			     
+			     
+			     
+			     
+			     
+			     
+			     
+			     
+			     
+			     
+			     
+			     
+			     
+			     
