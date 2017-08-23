@@ -5,20 +5,52 @@
 #include "Leg.h"
 
 
-MoveQuadraped::MoveQuadraped()
+MoveQuadraped::MoveQuadraped(int xBodyOffset, int yBodyOffset, int zBodyOffset, int legAngleOffset, int noLegs)
 	{
-	
+
+		xBodyOffset_ = xBodyOffset;
+		yBodyOffset_ = yBodyOffset;
+		zBodyOffset_ = zBodyOffset;
+		legAngleOffset_ = legAngleOffset;
+		noLegs_ = noLegs;
+
 	}
-	
-	void MoveQuadraped::walkDir(int theta, int vector, int elevate)
+
+void MoveQuadraped::initialise()
 	{
-		theta_ = theta;
-		vector_ = vector;
-		elevate_ = elevate;
+		for (int i = 0; i < noLegs; i++) {
+			legOrientation[i] = legAngleOffset_ + (360/noLegs_) * i;
+			xLegInit[i] = xBodyOffset_ + COXA_LEN[i] + FEMUR_LEN[i];
+			yLegInit[i] = yBodyOffset_ + TIBIA_LEN[i];
+			zLegInit[i] = zBodyOffset_;
+
+			//xLastPos[i] = 0, yLostPos[i] = 0, zLastPos[i] = 0;
+			LegConstruct[i].setLegInit();      //Set Initial parameters
+			LegConstruct[i].setLegTiming(10, 1);
+		}
+
+}
+
+void bodyIk(int x, int y, int z)
+{
+	x_ = x;
+	y_ = y;
+	z_ = z;
+
+	theta_ = atan2(z_/x_);
+
+	for (int i = 0; i < noLegs; i++) {
+		xLeg[i] = x * cos((theta_ - legOrientation[i]) * 3.14 / 180) - xLegInit[i] * cos((legOrientation[i] - legOrientation[i]) * 3.14 / 180);
+		zLeg[i] = z * sin((theta_ - legOrientation[i]) * 3.14 / 180) - zLegInit[i] * sin((legOrientation[i] - legOrientation[i]) * 3.14 / 180);
+		yLeg[i] = y - yLegInit[i];
 	}
-	
-	int MoveQuadraped::legStep(int legNr)
-	{
+
+}
+
+
+/*
+int MoveQuadraped::legStep(int legNr)
+{
 	int stepCounterFlag=0;
 	stepLen_ = vector_;
 	const float STEPHEIGHT = 0.1;
@@ -29,7 +61,7 @@ MoveQuadraped::MoveQuadraped()
 			zArr[i] = yLastPos[legNr] + (i * sin((theta_ - legOrientation[legNr])*3.14 / 180));
 			yArr[i] = Y0 - (-STEPHEIGHT * pow(i, 2) + STEPHEIGHT * stepLen_ * i);
 		}
-		
+
 
 		if (updateFlag == 1) {
 			LegConstruct[legNr].legIk(xArr[legStepCounter], yArr[legStepCounter], zArr[legStepCounter]);
@@ -55,10 +87,10 @@ MoveQuadraped::MoveQuadraped()
 
 		return stepCounterFlag;
 	}
-	
+
 	void MoveQuadraped::legIk(int legNr, int xLastPos, int yLastPos, int zLastPos);
 	{
-		
+
 		xLastPos[legNr] = xLastPos;
 		yLastPos[legNr] = yLastPos;
 		zLastPos[legNr]= zLastPos;
@@ -66,28 +98,29 @@ MoveQuadraped::MoveQuadraped()
 	}
 	void MoveQuadraped::stepTiming(int stepLen, int stepTime)
 	{
-		
-	stepTime_ = stepTime;	
+
+	stepTime_ = stepTime;
 	stepLen_ = stepLen;
 	int incrementServos = 1;
 	unsigned long updateInterval = stepTime_/stepLen_;
-		
+
 		for (int i = 0; i < 4; i++) {
 			LegConstruct[i].setLegTiming(updateInterval, incrementServos);
 		}
 	}
-	
-	int MoveQuadraped::translateBody(int legRF, int legLF, int legLB, int legRB, int newVector)
+*/
+
+int MoveQuadraped::translateBody(int legRF, int legLF, int legLB, int legRB, int newVector)
 	{
 
 	int flagArr[4] = {1 ,1, 1, 1};
 	int translateFlag = 0;
 	const int RIGHT_FRONT = 0, LEFT_FRONT = 1, LEFT_BACK = 2, RIGHT_BACK = 3;
 
-		for (int i = 0; i < 4; i++) {
-			xLeg[i] = xLastPos[i] + (-1 * (newVector * cos((theta_ - legOrientation[i]) * 3.14 / 180) - VECTOR_0 * cos((legOrientation[i] - legOrientation[i]) * 3.14 / 180)));
-			zLeg[i] = yLastPos[i] + (-1 * (newVector * sin((theta_ - legOrientation[i]) * 3.14 / 180) - VECTOR_0 * sin((legOrientation[i] - legOrientation[i]) * 3.14 / 180)));
-			yLeg[i] = yLastPos[i] + Y0 - elevate_;
+	for (int i = 0; i < 4; i++) {
+			xLeg[i] = -xLeg[i];
+			zLeg[i] = -zLeg[i];
+			yLeg[i] = yLeg[i];
 		}
 			//Serial.print(newVector);
 			//Serial.print(" : ");
@@ -125,17 +158,4 @@ MoveQuadraped::MoveQuadraped()
 		}
 
 		return translateFlag;
-	}
-
-	
-	void MoveQuadraped::initialise()
-	{
-		for (int i = 0; i < 4; i++) {
-			LegConstruct[i].setLegInit();      //Set Initial parameters
-			legOrientation[i] = 45 + 90 * i;
-			LegConstruct[i].setLegTiming(10, 1);
-			xLeg[i] = X0, yLeg[i] = Y0, zLeg[i] = Z0;
-			xLastPos[i] = 0, yLostPos[i] = 0, zLastPos[i] = 0;
-		}
-
-	}
+}

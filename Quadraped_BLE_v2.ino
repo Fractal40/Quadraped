@@ -11,6 +11,9 @@ int theta, vector, elevate;
 boolean aButton = false, bButton = false;
 //endjoystick
 
+int zVector;
+int xVector;
+int yVector=0;
 
 int moveSequence = 0;
 
@@ -31,21 +34,23 @@ void setup() {
   //Joystick_end
 
   Move.initialise();
-  
-  Move.stepTiming(30, 200);
-  Move.walkDir(90, 30, 0);
-  
+
+  //Move.stepTiming(30, 200);
+  //Move.walkDir(90, 30, 0);
+
 
 }
 
 void loop() {
-  
+
 
   getConData();
   //translateBody(1, 1, 1, 1, vector);
     //vector = 30; // from getConData()
-  theta = 90;  // from getConData()
-  
+  //theta = 90;  // from getConData()
+  Move.bodyIk(xVector, yVector, zVector)
+  Move.translateBody(1,1,1,1,30)
+/*
   if (vector > 0) {
     int moveFlag;
 
@@ -109,8 +114,8 @@ void loop() {
         } //end if_else
     }
   }
-  
 
+*/
 
 }
 
@@ -148,9 +153,9 @@ void getConData()
     bButton = false;
   } //end if
 
-  if (aButton == true && elevate > -40) {
-    elevate--;  //body up
+  if (aButton == true && yVector > -40) {
+    yVector--;  //body up
   } else if (bButton == true && elevate < 40) {
-    elevate++;  //body down
+    yVector++;  //body down
   } //end if
 }
