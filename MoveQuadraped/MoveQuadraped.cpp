@@ -18,11 +18,11 @@ MoveQuadraped::MoveQuadraped(int xBodyOffset, int yBodyOffset, int zBodyOffset, 
 
 void MoveQuadraped::initialise()
 	{
-		for (int i = 0; i < noLegs; i++) {
+		for (int i = 0; i < noLegs_; i++) {
 			legOrientation[i] = legAngleOffset_ + (360/noLegs_) * i;
-			xLegInit[i] = xBodyOffset_ + COXA_LEN[i] + FEMUR_LEN[i];
+			xLegInit[i] = xBodyOffset_ / cos(legAngleOffset_ * 3.14 / 180) + COXA_LEN[i] + FEMUR_LEN[i];
 			yLegInit[i] = yBodyOffset_ + TIBIA_LEN[i];
-			zLegInit[i] = zBodyOffset_;
+			zLegInit[i] = zBodyOffset_ / sin(legAngleOffset_ * 3.14 / 180);
 
 			//xLastPos[i] = 0, yLostPos[i] = 0, zLastPos[i] = 0;
 			LegConstruct[i].setLegInit();      //Set Initial parameters
@@ -31,18 +31,18 @@ void MoveQuadraped::initialise()
 
 }
 
-void bodyIk(int x, int y, int z)
+void MoveQuadraped::bodyIk(int x, int y, int z)
 {
 	x_ = x;
 	y_ = y;
 	z_ = z;
 
-	theta_ = atan2(z_/x_);
+	theta_ = atan2(z_,x_);
 
-	for (int i = 0; i < noLegs; i++) {
-		xLeg[i] = x * cos((theta_ - legOrientation[i]) * 3.14 / 180) - xLegInit[i] * cos((legOrientation[i] - legOrientation[i]) * 3.14 / 180);
-		zLeg[i] = z * sin((theta_ - legOrientation[i]) * 3.14 / 180) - zLegInit[i] * sin((legOrientation[i] - legOrientation[i]) * 3.14 / 180);
-		yLeg[i] = y - yLegInit[i];
+	for (int i = 0; i < noLegs_; i++) {
+		xLeg[i] = x_ * cos((theta_ - legOrientation[i]) * 3.14 / 180) - xLegInit[i] * cos((legOrientation[i] - legOrientation[i]) * 3.14 / 180);
+		zLeg[i] = z_ * sin((theta_ - legOrientation[i]) * 3.14 / 180) - zLegInit[i] * sin((legOrientation[i] - legOrientation[i]) * 3.14 / 180);
+		yLeg[i] = yLegInit[i] - y_;
 	}
 
 }
@@ -136,19 +136,19 @@ int MoveQuadraped::translateBody(int legRF, int legLF, int legLB, int legRB, int
 			//Serial.println(zLeg[3]);
 
 		if (legRF == 1) {
-			LegConstruct[RIGHT_FRONT].legIk(xLeg[RIGHT_FRONT], yLeg[RIGHT_FRONT], zLeg[RIGHT_FRONT]);
+			LegConstruct[RIGHT_FRONT].calcLegIk(xLeg[RIGHT_FRONT], yLeg[RIGHT_FRONT], zLeg[RIGHT_FRONT]);
 			flagArr[0] = LegConstruct[RIGHT_FRONT].updateLeg();
 		}
 		if (legLF == 1) {
-			LegConstruct[LEFT_FRONT].legIk(xLeg[LEFT_FRONT], yLeg[LEFT_FRONT], zLeg[LEFT_FRONT]);
+			LegConstruct[LEFT_FRONT].calcLegIk(xLeg[LEFT_FRONT], yLeg[LEFT_FRONT], zLeg[LEFT_FRONT]);
 			flagArr[1] = LegConstruct[LEFT_FRONT].updateLeg();
 		}
 		if (legLB == 1) {
-			LegConstruct[LEFT_BACK].legIk(xLeg[LEFT_BACK], yLeg[LEFT_BACK], zLeg[LEFT_BACK]);
+			LegConstruct[LEFT_BACK].calcLegIk(xLeg[LEFT_BACK], yLeg[LEFT_BACK], zLeg[LEFT_BACK]);
 			flagArr[2] = LegConstruct[LEFT_BACK].updateLeg();
 		}
 		if (legRB == 1) {
-			LegConstruct[RIGHT_BACK].legIk(xLeg[RIGHT_BACK], yLeg[RIGHT_BACK], zLeg[RIGHT_BACK]);
+			LegConstruct[RIGHT_BACK].calcLegIk(xLeg[RIGHT_BACK], yLeg[RIGHT_BACK], zLeg[RIGHT_BACK]);
 			flagArr[3] = LegConstruct[RIGHT_BACK].updateLeg();
 		}
 

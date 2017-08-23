@@ -19,7 +19,7 @@ int moveSequence = 0;
 
 
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
-MoveQuadraped Move = MoveQuadraped();
+MoveQuadraped Move = MoveQuadraped(34, 0, 34, 45, 4);
 
 
 
@@ -48,8 +48,8 @@ void loop() {
   //translateBody(1, 1, 1, 1, vector);
     //vector = 30; // from getConData()
   //theta = 90;  // from getConData()
-  Move.bodyIk(xVector, yVector, zVector)
-  Move.translateBody(1,1,1,1,30)
+  Move.bodyIk(xVector, yVector, zVector);
+  Move.translateBody(1,1,1,1,30);
 /*
   if (vector > 0) {
     int moveFlag;
@@ -135,13 +135,15 @@ void getConData()
   }
 
   if (conData[0] == 255) {
-    int zVector = int(conData[2]);
-    int xVector = int(conData[1]);
+    zVector = int(conData[2]);
+    xVector = int(conData[1]);
     aButton = boolean(conData[3]);
     bButton = boolean(conData[4]);
 
     xVector = xVector * 5 - 250;
+
     zVector = zVector * 5 - 250;
+
 
     theta = atan2(zVector, xVector) * 180 / 3.14;
     vector = sqrt(pow(zVector, 2) + pow(xVector, 2));
@@ -158,4 +160,11 @@ void getConData()
   } else if (bButton == true && elevate < 40) {
     yVector++;  //body down
   } //end if
+
+      Serial.print(xVector);
+      Serial.print(" : ");
+      Serial.print(yVector);
+      Serial.print(" : ");
+      Serial.println(zVector);
+
 }
