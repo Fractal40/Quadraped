@@ -20,9 +20,9 @@ void MoveQuadraped::initialise()
 	{
 		for (int i = 0; i < noLegs_; i++) {
 			legOrientation[i] = legAngleOffset_ + (360/noLegs_) * i;
-			xLegInit[i] = xBodyOffset_ / cos(legAngleOffset_ * 3.14 / 180) + COXA_LEN[i] + FEMUR_LEN[i];
-			yLegInit[i] = yBodyOffset_ + TIBIA_LEN[i];
-			zLegInit[i] = zBodyOffset_ / sin(legAngleOffset_ * 3.14 / 180);
+			xLegInit[i] = COXA_LEN[i] + FEMUR_LEN[i];
+			yLegInit[i] = TIBIA_LEN[i];
+			zLegInit[i] = 0;
 
 			//xLastPos[i] = 0, yLostPos[i] = 0, zLastPos[i] = 0;
 			LegConstruct[i].setLegInit();      //Set Initial parameters
@@ -31,22 +31,31 @@ void MoveQuadraped::initialise()
 
 }
 
-void MoveQuadraped::bodyIk(int x, int y, int z)
+void MoveQuadraped::bodyIk()
 {
-	x_ = x;
-	y_ = y;
-	z_ = z;
 
-	theta_ = atan2(z_,x_);
+
+	theta = atan2(z_,x_) *180/ 3.14;
+	vector = sqrt(pow(z_,2)+pow(x_,2));
+	vector = constrain(vector, 0, 60);
+
+
 
 	for (int i = 0; i < noLegs_; i++) {
-		xLeg[i] = x_ * cos((theta_ - legOrientation[i]) * 3.14 / 180) - xLegInit[i] * cos((legOrientation[i] - legOrientation[i]) * 3.14 / 180);
-		zLeg[i] = z_ * sin((theta_ - legOrientation[i]) * 3.14 / 180) - zLegInit[i] * sin((legOrientation[i] - legOrientation[i]) * 3.14 / 180);
-		yLeg[i] = yLegInit[i] - y_;
+		xLeg[i] = vector * cos((theta - legOrientation[i]) * 3.14 / 180) - xLegInit[i] * cos((legOrientation[i] - legOrientation[i]) * 3.14 / 180);
+		zLeg[i] = vector * sin((theta - legOrientation[i]) * 3.14 / 180) - zLegInit[i] * sin((legOrientation[i] - legOrientation[i]) * 3.14 / 180);
+		yLeg[i] = -1 * (y_ - yLegInit[i]); // -1 because y-axis is inverted
 	}
 
 }
 
+
+void MoveQuadraped::getCoord(int x, int y, int z)
+{
+	x_ = x;
+	y_ = y;
+	z_ = z;
+}
 
 /*
 int MoveQuadraped::legStep(int legNr)
@@ -117,23 +126,13 @@ int MoveQuadraped::translateBody(int legRF, int legLF, int legLB, int legRB, int
 	int translateFlag = 0;
 	const int RIGHT_FRONT = 0, LEFT_FRONT = 1, LEFT_BACK = 2, RIGHT_BACK = 3;
 
+	bodyIk();
+
 	for (int i = 0; i < 4; i++) {
 			xLeg[i] = -xLeg[i];
 			zLeg[i] = -zLeg[i];
 			yLeg[i] = yLeg[i];
 		}
-			//Serial.print(newVector);
-			//Serial.print(" : ");
-			//Serial.print(theta_);
-			//Serial.print(" : ");
-			//Serial.println(legOrientation[3]);
-			//Serial.print(" : ");
-			//Serial.print(" : ");
-			//Serial.print(xLeg[3]);
-			//Serial.print(" : ");
-			//Serial.print(yLeg[3]);
-			//Serial.print(" : ");
-			//Serial.println(zLeg[3]);
 
 		if (legRF == 1) {
 			LegConstruct[RIGHT_FRONT].calcLegIk(xLeg[RIGHT_FRONT], yLeg[RIGHT_FRONT], zLeg[RIGHT_FRONT]);
@@ -151,7 +150,6 @@ int MoveQuadraped::translateBody(int legRF, int legLF, int legLB, int legRB, int
 			LegConstruct[RIGHT_BACK].calcLegIk(xLeg[RIGHT_BACK], yLeg[RIGHT_BACK], zLeg[RIGHT_BACK]);
 			flagArr[3] = LegConstruct[RIGHT_BACK].updateLeg();
 		}
-
 
 		if (flagArr[0] + flagArr[1] + flagArr[2] + flagArr[3] == 4) { //Test if all legs have been updated.
 			translateFlag = 1;

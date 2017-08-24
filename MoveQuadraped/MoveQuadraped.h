@@ -14,8 +14,8 @@ class MoveQuadraped
 		void stepTiming(int stepLen, int stepTime);
 		int translateBody(int legRF, int legLF, int legLB, int legRB, int newVector);
 		void initialise();
-		void walkDir(int theta, int vector, int elevate);
-		void bodyIk(int x, int y, int z);
+		void getCoord(int x, int y, int z);
+		void bodyIk();
 
 		//Leg Constructor: Leg(coxalength, femurlength, tibialength, coxa servoindex, femur servoindex, tibia servoindex)
 
@@ -34,7 +34,7 @@ class MoveQuadraped
 		int legAngleOffset_;
 		int noLegs_;
 
-		int theta_, x_, y_, z_;
+		int vector, theta, x_, y_, z_;
 
 		int xLeg[4], yLeg[4], zLeg[4];
 		int xLegInit[4], yLegInit[4], zLegInit[4];

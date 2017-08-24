@@ -48,7 +48,7 @@ void loop() {
   //translateBody(1, 1, 1, 1, vector);
     //vector = 30; // from getConData()
   //theta = 90;  // from getConData()
-  Move.bodyIk(xVector, yVector, zVector);
+  Move.getCoord(xVector, yVector, zVector);
   Move.translateBody(1,1,1,1,30);
 /*
   if (vector > 0) {
@@ -143,7 +143,7 @@ void getConData()
     xVector = xVector * 5 - 250;
 
     zVector = zVector * 5 - 250;
-
+   
 
     theta = atan2(zVector, xVector) * 180 / 3.14;
     vector = sqrt(pow(zVector, 2) + pow(xVector, 2));
@@ -157,14 +157,10 @@ void getConData()
 
   if (aButton == true && yVector > -40) {
     yVector--;  //body up
-  } else if (bButton == true && elevate < 40) {
+  } else if (bButton == true && yVector < 40) {
     yVector++;  //body down
   } //end if
 
-      Serial.print(xVector);
-      Serial.print(" : ");
-      Serial.print(yVector);
-      Serial.print(" : ");
-      Serial.println(zVector);
 
+      
 }
