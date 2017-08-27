@@ -21,16 +21,16 @@ class Leg
     int _coxaAngle, _femurAngle, _tibiaAngle;
     int _servoNrCoxa, _servoNrFemur, _servoNrTibia;
     int _x, _y, _z;
-    int _updateInterval=50, _increment=1;
+    int _updateInterval=1000, _increment=1;
     int coxaPulse, femurPulse, tibiaPulse, coxaPulseLastpos, femurPulseLastpos, tibiaPulseLastpos;
-    
+    int stepFlag = 1;
     int _coxaLen, _femurLen, _tibiaLen; // lengths of leg parts - coxa, femur, tibia
     int const SERVOMINIMUM = 100, SERVOMAXIMUM = 600;
     unsigned long lastUpdate; // last update of position
 	int const SERVOMIN[12] = {239,238,262,252,256,256,234,258,234,252,242,252};
 	int const SERVOMAX[12] = {453,460,470,468,486,486,446,480,470,462,462,466};
 
-    
+
 };
 
 #endif
