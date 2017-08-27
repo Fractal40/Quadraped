@@ -1,0 +1,9 @@
+
+
+MoveQuadraped	KEYWORD1
+legStep	KEYWORD2
+stepTiming	KEYWORD2
+translateBody	KEYWORD2
+initialise	KEYWORD2
+walkDir	KEYWORD2
+legIK KEYWORD2

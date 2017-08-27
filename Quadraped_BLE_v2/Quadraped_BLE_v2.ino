@@ -9,14 +9,25 @@ const int CONDATA_BYTES = 5;
 int conData[5];
 int theta, vector, elevate;
 boolean aButton = false, bButton = false;
+//smoothing
+const int numReadings = 20;
+float zReadings[numReadings], xReadings[numReadings];  // the readings from controller input
+int zReadIndex = 0, xReadIndex = 0;              // the index of the current reading
+float zTotal = 0, xTotal = 0;                  // the running total
+float zAverage = 0, xAverage = 0;                // the average
 //endjoystick
 
+int zVector;
+int xVector;
+int yVector=0;
 
 int moveSequence = 0;
 
+//timer
+unsigned long lastTimeConData;
 
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
-MoveQuadraped Move = MoveQuadraped();
+MoveQuadraped Move = MoveQuadraped(34, 0, 34, 45, 4);
 
 
 
@@ -31,21 +42,34 @@ void setup() {
   //Joystick_end
 
   Move.initialise();
-  
-  Move.stepTiming(30, 200);
-  Move.walkDir(90, 30, 0);
-  
+
+  //Move.stepTiming(30, 200);
+  //Move.walkDir(90, 30, 0);
+  delay(1000);
 
 }
 
 void loop() {
   
 
-  getConData();
-  //translateBody(1, 1, 1, 1, vector);
+  if (millis() - lastTimeConData > 20){
+    lastTimeConData = millis();
+    getConData();
+  }
+  //Serial.print(zVector);
+  //Serial.print(" : ");
+  //Serial.println(xVector);
+
     //vector = 30; // from getConData()
-  theta = 90;  // from getConData()
+  //theta = 90;  // from getConData()
+  //zVector = -50;
+  //xVector = -50;
+  //yVector = 0;
   
+  Move.getCoord(xVector, yVector, zVector);
+  //Move.pitchBody();
+  Move.translateBody(1,1,1,1,30);
+/*
   if (vector > 0) {
     int moveFlag;
 
@@ -109,8 +133,8 @@ void loop() {
         } //end if_else
     }
   }
-  
 
+*/
 
 }
 
@@ -122,6 +146,8 @@ void loop() {
 void getConData()
 {
 
+
+  
   int cnt = 0;
   Wire.requestFrom(SLAVE_ADDRESS, CONDATA_BYTES);
   while (Wire.available()) {
@@ -130,27 +156,58 @@ void getConData()
   }
 
   if (conData[0] == 255) {
-    int zVector = int(conData[2]);
-    int xVector = int(conData[1]);
+    zVector = int(conData[2]);
+    xVector = int(conData[1]);
     aButton = boolean(conData[3]);
     bButton = boolean(conData[4]);
 
     xVector = xVector * 5 - 250;
     zVector = zVector * 5 - 250;
 
-    theta = atan2(zVector, xVector) * 180 / 3.14;
-    vector = sqrt(pow(zVector, 2) + pow(xVector, 2));
-    vector = constrain(vector, 0, 40);
   } else {
-    theta = 0;
-    vector = 0;
+    xVector = 0;
+    zVector = 0;
     aButton = false;
     bButton = false;
   } //end if
 
-  if (aButton == true && elevate > -40) {
-    elevate--;  //body up
-  } else if (bButton == true && elevate < 40) {
-    elevate++;  //body down
+  if (aButton == true && yVector > -40) {
+    yVector--;  //body up
+  } else if (bButton == true && yVector < 40) {
+    yVector++;  //body down
   } //end if
+
+//Smoothing of controller data to reduce jittering
+
+//z reading
+  zTotal = zTotal - zReadings[zReadIndex];
+  zReadings[zReadIndex] = zVector; 
+  zTotal = zTotal + zReadings[zReadIndex];
+  zReadIndex = zReadIndex + 1;
+  
+  if (zReadIndex >= numReadings) {
+     zReadIndex = 0;
+     
+  }
+
+  zVector = zTotal / numReadings;  //smoothed zVector data
+  
+
+  //horizontal reading
+  xTotal = xTotal - xReadings[xReadIndex];
+  xReadings[xReadIndex] = xVector; 
+  xTotal = xTotal + xReadings[xReadIndex];
+  xReadIndex = xReadIndex + 1;
+  
+  if (xReadIndex >= numReadings) {
+     xReadIndex = 0;
+     
+    
+  }
+
+  xVector = xTotal / numReadings; //smoothed xVector data
+
+  
+
+      
 }
