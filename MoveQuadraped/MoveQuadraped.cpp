@@ -26,7 +26,7 @@ void MoveQuadraped::initialise()
 
 			//xLastPos[i] = 0, yLostPos[i] = 0, zLastPos[i] = 0;
 			LegConstruct[i].setLegInit();      //Set Initial parameters
-			LegConstruct[i].setLegTiming(5, 2);
+			LegConstruct[i].setLegTiming(50, 1);
 		}
 
 }
@@ -38,178 +38,197 @@ void MoveQuadraped::stepTiming(int stepLen, int stepTime)
 
 }
 
-void MoveQuadraped::bodyIk()
-{
+	void MoveQuadraped::bodyIk(int legRF, int legLF, int legLB, int legRB)
+	{
+		int legIkFlag[] = {legRF, legLF, legLB, legRB};
 
+		for (int i = 0; i < noLegs_; i++) {
+			if (legIkFlag[i] == 1) {
+				xLeg[i] = vector * cos((theta - legOrientation[i]) * 3.14 / 180) - xLegInit[i] * cos((legOrientation[i] - legOrientation[i]) * 3.14 / 180);
+				zLeg[i] = vector * sin((theta - legOrientation[i]) * 3.14 / 180) - zLegInit[i] * sin((legOrientation[i] - legOrientation[i]) * 3.14 / 180);
+				yLeg[i] = -1 * (y_ - yLegInit[i]); // -1 because y-axis is inverted
+			}
 
-	theta = atan2(z_,x_) *180/ 3.14;
-	vector = sqrt(pow(z_,2)+pow(x_,2));
-	vector = constrain(vector, 0, 60);
+		} // end for
 
-
-
-	for (int i = 0; i < noLegs_; i++) {
-		xLeg[i] = vector * cos((theta - legOrientation[i]) * 3.14 / 180) - xLegInit[i] * cos((legOrientation[i] - legOrientation[i]) * 3.14 / 180);
-		zLeg[i] = vector * sin((theta - legOrientation[i]) * 3.14 / 180) - zLegInit[i] * sin((legOrientation[i] - legOrientation[i]) * 3.14 / 180);
-		yLeg[i] = -1 * (y_ - yLegInit[i]); // -1 because y-axis is inverted
 	}
 
-}
 
+	void MoveQuadraped::getCoord(int x, int y, int z)
+	{
+		x_ = x;
+		y_ = y;
+		z_ = z;
 
-void MoveQuadraped::getCoord(int x, int y, int z)
-{
-	x_ = x;
-	y_ = y;
-	z_ = z;
-}
+		theta = atan2(z_,x_) *180/ 3.14;
+		vector = sqrt(pow(z_,2)+pow(x_,2));
+		vector = constrain(vector, 0, 40);
 
-/*
-int MoveQuadraped::legStep(int legNr)
-{
-	int stepCounterFlag=0;
-	stepLen_ = vector_;
-	const float STEPHEIGHT = 0.1;
-	int xArr[stepLen_+1], zArr[stepLen_+1], yArr[stepLen_+1];
+		theta = 90;
+		vector = 40;
+		stepLen_ = vector;
 
-		for (int i = 0; i <= stepLen_; i++) {
-			xArr[i] = xLastPos[legNr] + (i * cos((theta_ - legOrientation[legNr]) * 3.14 / 180) + VECTOR_0);
-			zArr[i] = yLastPos[legNr] + (i * sin((theta_ - legOrientation[legNr])*3.14 / 180));
-			yArr[i] = Y0 - (-STEPHEIGHT * pow(i, 2) + STEPHEIGHT * stepLen_ * i);
-		}
-
-
-		if (updateFlag == 1) {
-			LegConstruct[legNr].legIk(xArr[legStepCounter], yArr[legStepCounter], zArr[legStepCounter]);
-			//Serial.print(xArr[legStepCounter]);
-			//Serial.print(" : ");
-			//Serial.print(yArr[legStepCounter]);
-			//Serial.print(" : ");
-			//Serial.print(zArr[legStepCounter]);
-			//Serial.print(" : ");
-			//Serial.println(legStepCounter);
-			if (legStepCounter < stepLen_) {
-			legStepCounter++;
-			//stepCounterFlag = 0;      //clear step flag
-			} else {
-			legStepCounter = 0;
-			stepCounterFlag = 1;     //set step flag
-			} //end if
-		}
-		updateFlag = 0;     //clear step fraction flag
-		updateFlag = LegConstruct[legNr].updateLeg();
-			//Serial.print(" : ");
-			//Serial.println(legStepCounter);
-
-		return stepCounterFlag;
 	}
 
-	void MoveQuadraped::legIk(int legNr, int xLastPos, int yLastPos, int zLastPos);
+
+
+
+	void MoveQuadraped::legStep(int legNr)
 	{
 
-		xLastPos[legNr] = xLastPos;
-		yLastPos[legNr] = yLastPos;
-		zLastPos[legNr]= zLastPos;
-		LegConstruct[legNr].calcLegIk(xLastPos, yLastPos, zLastPos);
-	}
-	void MoveQuadraped::stepTiming(int stepLen, int stepTime)
-	{
+		float STEPHEIGHT = 0.2;
 
-	stepTime_ = stepTime;
-	stepLen_ = stepLen;
-	int incrementServos = 1;
-	unsigned long updateInterval = stepTime_/stepLen_;
-
-		for (int i = 0; i < 4; i++) {
-			LegConstruct[i].setLegTiming(updateInterval, incrementServos);
+		switch (legNr) {
+			case 0:
+				bodyIk(1, 0, 0, 0);
+				break;
+			case 1:
+				bodyIk(0, 1, 0, 0);
+				break;
+			case 2:
+				bodyIk(0, 0, 1, 0);
+				break;
+			case 3:
+				bodyIk(0, 0, 0, 1);
+				break;
 		}
+		delay(1);
+
+		xLeg[legNr] = xLeg[legNr];// - stepLen_;
+		zLeg[legNr] = zLeg[legNr];
+		yLeg[legNr] = yLegInit[legNr] - (-STEPHEIGHT * pow(stepCounter,2) + STEPHEIGHT * stepLen_ * vector);
+
+		LegConstruct[legNr].calcLegIk(xLeg[legNr], yLeg[legNr], zLeg[legNr]);
+		//Serial.print(legNr);
+		//Serial.print(" : ");
+		//Serial.print(xLeg[legNr]);
+		//Serial.print(" : ");
+		//Serial.print(yLeg[legNr]);
+		//Serial.print(" : ");
+		//Serial.println(zLeg[legNr]);
 	}
-*/
 
-int MoveQuadraped::pitchBody()
+	void MoveQuadraped::walk()
 	{
-		int translateFlag;
-	int flagArr[4] = {1 ,1, 1, 1};
-	int rollPitchFlag = 0;
-	const int RIGHT_FRONT = 0, LEFT_FRONT = 1, LEFT_BACK = 2, RIGHT_BACK = 3;
 
-	bodyIk();
+		int updateFlag = 0;
 
+		Serial.print(stepCounter);
+		Serial.print(" : ");
+		Serial.print(vector);
+		Serial.print(" : ");
+		Serial.println(step);
 
+		switch (step) {
+			case 0:
+				if (stepCounter <= stepLen_) {
+					vector = stepCounter;
+					legStep(2);
+					//translateBody(1,1,0,1);
+					updateFlag = updateBody();
+
+					if (updateFlag == 1) {
+							stepCounter++;
+					}
+
+				} else {
+					stepCounter = 1;
+					step = 0;                 // <---- next step
+				}
+				break;
+			case 1:
+				if (stepCounter <= stepLen_) {
+					vector = stepCounter;
+					legStep(0);
+					vector = stepCounter + 10;
+					//translateBody(0,1,1,1);
+					//updateFlag = updateBody();
+					if (LegConstruct[0].updateLeg() == 1) {
+							stepCounter++;
+					}
+				} else {
+					stepCounter = 1;
+					step = 2;
+				}
+				break;
+			case 2:
+				if (stepCounter <= stepLen_) {
+					vector = stepCounter;
+					legStep(3);
+					vector = stepCounter + 20;
+					//translateBody(1,1,1,0);
+					//updateFlag = updateBody();
+					if (LegConstruct[3].updateLeg() == 1) {
+							stepCounter++;
+					}
+				} else {
+					stepCounter = 1;
+					step = 3;
+				}
+				break;
+			case 3:
+				if (stepCounter <= stepLen_) {
+					vector = stepCounter;
+					legStep(1);
+					vector = stepCounter + 30;
+				  //translateBody(1,0,1,1);
+					//updateFlag = updateBody();
+					if (LegConstruct[1].updateLeg() == 1) {
+							stepCounter++;
+					}
+				} else {
+					stepCounter = 1;
+					step = 0;
+				}
+				break;
+
+		}
+		delay(1);
+		//Serial.print(step);
+		//Serial.print(" : ");
+		//Serial.print(stepCounter);
+		//Serial.print(" : ");
+		//Serial.println(vector);
+
+	}
+
+void MoveQuadraped::translateBody(int legRF, int legLF, int legLB, int legRB)
+{
+
+	int legIkFlag[] = {legRF, legLF, legLB, legRB};
+
+	bodyIk(legRF, legLF, legLB, legRB);
 
 	for (int i = 0; i < 4; i++) {
+		if (legIkFlag[i] == 1) {
 			xLeg[i] = -xLeg[i];
 			zLeg[i] = -zLeg[i];
 			yLeg[i] = yLeg[i];
 		}
+	}
 
-		if (x_ > 0) {
-			yLeg[RIGHT_FRONT] = x_;
-			yLeg[LEFT_FRONT] = x_;
-			yLeg[RIGHT_BACK] = -x_;
-			yLeg[LEFT_BACK] = -x_;
+	for (int i = 0; i < 4; i++) {
+		if (legIkFlag[i] == 1) {
+			LegConstruct[i].calcLegIk(xLeg[i], yLeg[i], zLeg[i]);
 		}
+	}
 
-
-			LegConstruct[RIGHT_FRONT].calcLegIk(xLeg[RIGHT_FRONT], yLeg[RIGHT_FRONT], zLeg[RIGHT_FRONT]);
-			flagArr[0] = LegConstruct[RIGHT_FRONT].updateLeg();
-
-			LegConstruct[LEFT_FRONT].calcLegIk(xLeg[LEFT_FRONT], yLeg[LEFT_FRONT], zLeg[LEFT_FRONT]);
-			flagArr[1] = LegConstruct[LEFT_FRONT].updateLeg();
-
-			LegConstruct[LEFT_BACK].calcLegIk(xLeg[LEFT_BACK], yLeg[LEFT_BACK], zLeg[LEFT_BACK]);
-			flagArr[2] = LegConstruct[LEFT_BACK].updateLeg();
-
-			LegConstruct[RIGHT_BACK].calcLegIk(xLeg[RIGHT_BACK], yLeg[RIGHT_BACK], zLeg[RIGHT_BACK]);
-			flagArr[3] = LegConstruct[RIGHT_BACK].updateLeg();
-
-
-		if (flagArr[0] + flagArr[1] + flagArr[2] + flagArr[3] == 4) { //Test if all legs have been updated.
-			translateFlag = 1;
-		}
-
-		return translateFlag;
 }
 
-int MoveQuadraped::translateBody(int legRF, int legLF, int legLB, int legRB, int newVector)
-	{
-
-	int flagArr[4] = {1 ,1, 1, 1};
-	int translateFlag = 0;
-	const int RIGHT_FRONT = 0, LEFT_FRONT = 1, LEFT_BACK = 2, RIGHT_BACK = 3;
-
-	bodyIk();
+int MoveQuadraped::updateBody()
+{
+	int flagArr[] = {1, 1, 1, 1};
 
 	for (int i = 0; i < 4; i++) {
-			xLeg[i] = -xLeg[i];
-			zLeg[i] = -zLeg[i];
-			yLeg[i] = yLeg[i];
-	}
-	for (int i = 0; i < 4; i++) {
-		LegConstruct[i].calcLegIk(xLeg[i], yLeg[i], zLeg[i]);
 		flagArr[i] = LegConstruct[i].updateLeg();
-	}
-/*
-		if (legRF == 1) {
-			LegConstruct[RIGHT_FRONT].calcLegIk(xLeg[RIGHT_FRONT], yLeg[RIGHT_FRONT], zLeg[RIGHT_FRONT]);
-			flagArr[0] = LegConstruct[RIGHT_FRONT].updateLeg();
-		}
-		if (legLF == 1) {
-			LegConstruct[LEFT_FRONT].calcLegIk(xLeg[LEFT_FRONT], yLeg[LEFT_FRONT], zLeg[LEFT_FRONT]);
-			flagArr[1] = LegConstruct[LEFT_FRONT].updateLeg();
-		}
-		if (legLB == 1) {
-			LegConstruct[LEFT_BACK].calcLegIk(xLeg[LEFT_BACK], yLeg[LEFT_BACK], zLeg[LEFT_BACK]);
-			flagArr[2] = LegConstruct[LEFT_BACK].updateLeg();
-		}
-		if (legRB == 1) {
-			LegConstruct[RIGHT_BACK].calcLegIk(xLeg[RIGHT_BACK], yLeg[RIGHT_BACK], zLeg[RIGHT_BACK]);
-			flagArr[3] = LegConstruct[RIGHT_BACK].updateLeg();
-		}
-*/
-		if (flagArr[0] + flagArr[1] + flagArr[2] + flagArr[3] == 4) { //Test if all legs have been updated.
-			translateFlag = 1;
-		}
 
-		return translateFlag;
+	}
+
+
+	if (flagArr[0] + flagArr[1] + flagArr[2] + flagArr[3] == 4) {
+		return 1;
+	} else {
+		return 0;
+	}
+
 }

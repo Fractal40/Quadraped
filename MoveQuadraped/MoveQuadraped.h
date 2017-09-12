@@ -12,14 +12,17 @@ class MoveQuadraped
 		MoveQuadraped(int xBodyOffset, int yBodyOffset, int zBodyOffset, int legAngleOffset, int noLegs);
 		int pitchBody();
 		void stepTiming(int stepLen, int stepTime);
-		int translateBody(int legRF, int legLF, int legLB, int legRB, int newVector);
+		void translateBody(int legRF, int legLF, int legLB, int legRB);
 		void initialise();
 		void getCoord(int x, int y, int z);
+		void walk();
+		void legStep(int legNr);
 
 
 	private:
-		void bodyIk();
-		int legStep(int legNr);
+		void bodyIk(int legRF, int legLF, int legLB, int legRB);
+		int updateBody();
+
 
 		const int COXA_LEN[4] = {30, 30, 30, 30};
 		const int FEMUR_LEN[4] = {79, 79, 79, 79};
@@ -32,6 +35,8 @@ class MoveQuadraped
 		int noLegs_;
 		int stepLen_, stepTime_;
 		int vector, theta, x_, y_, z_;
+		int step = 0;
+		int stepCounter = 1;
 
 		int xLeg[4], yLeg[4], zLeg[4];
 		int xLegInit[4], yLegInit[4], zLegInit[4];
