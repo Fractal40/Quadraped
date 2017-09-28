@@ -50,7 +50,7 @@ void setup() {
 }
 
 void loop() {
-  
+
 
   if (millis() - lastTimeConData > 20){
     lastTimeConData = millis();
@@ -65,10 +65,12 @@ void loop() {
   //zVector = -50;
   //xVector = -50;
   //yVector = 0;
-  
-  Move.getCoord(xVector, yVector, zVector);
+
+  Move.getCoord(23, 23, 24);
   //Move.pitchBody();
-  Move.translateBody(1,1,1,1,30);
+  Move.walk();
+  //Move.translateBody(1,1,1,1);
+  //Move.legStep(0);
 /*
   if (vector > 0) {
     int moveFlag;
@@ -147,7 +149,7 @@ void getConData()
 {
 
 
-  
+
   int cnt = 0;
   Wire.requestFrom(SLAVE_ADDRESS, CONDATA_BYTES);
   while (Wire.available()) {
@@ -181,33 +183,33 @@ void getConData()
 
 //z reading
   zTotal = zTotal - zReadings[zReadIndex];
-  zReadings[zReadIndex] = zVector; 
+  zReadings[zReadIndex] = zVector;
   zTotal = zTotal + zReadings[zReadIndex];
   zReadIndex = zReadIndex + 1;
-  
+
   if (zReadIndex >= numReadings) {
      zReadIndex = 0;
-     
+
   }
 
   zVector = zTotal / numReadings;  //smoothed zVector data
-  
+
 
   //horizontal reading
   xTotal = xTotal - xReadings[xReadIndex];
-  xReadings[xReadIndex] = xVector; 
+  xReadings[xReadIndex] = xVector;
   xTotal = xTotal + xReadings[xReadIndex];
   xReadIndex = xReadIndex + 1;
-  
+
   if (xReadIndex >= numReadings) {
      xReadIndex = 0;
-     
-    
+
+
   }
 
   xVector = xTotal / numReadings; //smoothed xVector data
 
-  
 
-      
+
+
 }
