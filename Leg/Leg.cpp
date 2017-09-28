@@ -43,121 +43,108 @@ Leg::Leg(int coxaLen, int femurLen, int tibiaLen, int servoNrCoxa, int servoNrFe
     setLegAngles(90,90,90);
 
     for (int servoIndex=0; servoIndex<3; servoIndex++) {
-		    pwm.setPWM(servoNr[servoIndex],0,pulse[servoIndex]);
-		    lastPulse[servoIndex] = pulse[servoIndex];    //Initial angles of servos, needed for setting initial pulse for updateLeg()
-	  }
- }
-
-
+	     pwm.setPWM(servoNr[servoIndex],0,int(pulse[servoIndex]));
+	      lastPulse[servoIndex] = pulse[servoIndex];    //Initial angles of servos, needed for setting initial pulse for updateLeg()
+    }
+  }
 
   void Leg::calcLegIk(int x, int y, int z)
   {
-    _x = x;
-    _y = y;
-    _z = z;
+
     float legLen,d,b1,b2;
 
-    legLen = sqrt(_x*_x+_z*_z);
-    _coxaAngle = atan2(_z,_x)*180/3,14;                                                                 //calculate angle a
-    d= sqrt(pow((legLen-_coxaLen),2)+(_y*_y));
-    b1 = atan2((legLen-_coxaLen),(_y))*180/3.14;
-    b2 = acos((pow(d,2)+pow(_femurLen,2)-pow(_tibiaLen,2))/(2*d*_femurLen))*180/3.14;
-    _femurAngle = (b1+b2)-90;                                                                          //calculate angle b
-    _tibiaAngle = acos((-pow(d,2)+pow(_tibiaLen,2)+pow(_femurLen,2))/(2*_femurLen*_tibiaLen))*180/3.14;    //calculate angle c
+    _y = y;
+    _x = x;
+    _z = z;
 
-    _tibiaAngle= _tibiaAngle;       //Adjust for servo orientations
-    _femurAngle=_femurAngle+90;
-    _coxaAngle=_coxaAngle+90;
+  legLen = sqrt(_x*_x+_z*_z);
+  _coxaAngle = atan2(_z,_x)*180/3,14;                                                                 //calculate angle a
+  d= sqrt(pow((legLen-_coxaLen),2)+(_y*_y));
+  b1 = atan2((legLen-_coxaLen),(_y))*180/3.14;
+  b2 = acos((pow(d,2)+pow(_femurLen,2)-pow(_tibiaLen,2))/(2*d*_femurLen))*180/3.14;
+  _femurAngle = (b1+b2)-90;                                                                          //calculate angle b
+  _tibiaAngle = acos((-pow(d,2)+pow(_tibiaLen,2)+pow(_femurLen,2))/(2*_femurLen*_tibiaLen))*180/3.14;    //calculate angle c
 
-    convDegToPulse();
-   }
+  _tibiaAngle= _tibiaAngle;       //Adjust for servo orientations
+  _femurAngle=_femurAngle+90;
+  _coxaAngle=_coxaAngle+90;
+
+  convDegToPulse();
+}
 
 void Leg::setLegTiming(int updateInterval, int increment)
 {
-    _updateInterval = updateInterval;
-    _increment = increment;
+  _updateInterval = updateInterval;
+  _increment = increment;
+}
+
+void Leg::setLegParabola(float coxaParabola, float femurParabola, float tibiaParabola)
+{
+  stepHeight[0] = coxaParabola;
+  stepHeight[1] = femurParabola;
+  stepHeight[2] = tibiaParabola;
+
 }
 
 int Leg::updateLeg()
 {
 
-  int incrementServo[3];
-  int servoShortestPulse;
-  int shortestPulse;
+  int longPulse, inc, parabola;
+  int stepFlag = 1;
+  float increment;
 
+  if((millis() - lastUpdate) > _updateInterval) {
 
-  if((millis() - lastUpdate) > _updateInterval)
-  {
-
-    shortestPulse = abs(lastPulse[0] - pulse[0]);
-    servoShortestPulse = 0;
-
-    for (int servoIndex=1; servoIndex<3; servoIndex++) {
-      if (abs(lastPulse[servoIndex] - pulse[servoIndex]) < shortestPulse) {
-        servoShortestPulse = servoIndex;
-        shortestPulse = abs(lastPulse[servoIndex] - pulse[servoIndex]);
+    longPulse = abs(lastPulse[0] - pulse[0]);
+    for (int servoIndex = 1; servoIndex < 3; servoIndex++) {
+      if (abs(lastPulse[servoIndex] - pulse[servoIndex]) > longPulse) {
+             longPulse = abs(lastPulse[servoIndex] - pulse[servoIndex]);
       } //end if
     } //end for
 
-    for (int servoIndex=0; servoIndex<3; servoIndex++) {
-      if (lastPulse[servoShortestPulse]-pulse[servoShortestPulse] != 0) {
-        incrementServo[servoIndex] = abs(lastPulse[servoIndex]-pulse[servoIndex]) / abs(lastPulse[servoShortestPulse]-pulse[servoShortestPulse]);
-      } //end if
+    lastUpdate = millis();
+
+    if (stepLengthFlag == 1) stepLength = longPulse;
+
+    for (int servoIndex = 0; servoIndex < 3; servoIndex++){
+
+      increment = (lastPulse[servoIndex] - pulse[servoIndex]) / longPulse;
+
+        if (lastPulse[servoIndex] != pulse[servoIndex]) {
+          lastPulse[servoIndex] -= increment;
+
+          inc = -1 * (longPulse - stepLength - 1);
+          parabola = -1 * stepHeight[servoIndex] * pow(inc,2) + stepHeight[servoIndex] * stepLength * inc;
+          pwm.setPWM(servoNr[servoIndex],0,int(lastPulse[servoIndex]) + parabola);
+/*  //debug
+if (servoIndex == 1) {
+          Serial.print(servoIndex);
+          Serial.print(" : ");
+          Serial.print(pulse[servoIndex]);
+          Serial.print(" : ");
+          Serial.print(stepLength);
+          Serial.print(" : ");
+          Serial.print(lastPulse[servoIndex]);
+          Serial.print(" : ");
+          Serial.print(stepLengthFlag);
+          Serial.print(" : ");
+          Serial.println(parabola);
+}
+*/
+        } //end if
     } // end for
 
 
 
-    lastUpdate = millis();
+    if (lastPulse[0] == pulse[0] && lastPulse[1] == pulse[1] && lastPulse[2] == pulse[2]) {
+      stepFlag = 1;
+      stepLengthFlag = 1;
+    } else {
+      stepFlag = 0;
+      stepLengthFlag = 0;
+    } //end if else
 
+    return stepFlag;
 
-        for (int servoIndex=0; servoIndex<3; servoIndex++){
-            if (lastPulse[servoIndex] > pulse[servoIndex]) {
-              if ((lastPulse[servoIndex] - pulse[servoIndex]) < incrementServo[servoIndex]) {
-                  incrementServo[servoIndex] = (lastPulse[servoIndex] - pulse[servoIndex]);
-              } else {
-                incrementServo[servoIndex] = incrementServo[servoIndex];
-              } // end if else
-              lastPulse[servoIndex] -= incrementServo[servoIndex];
-              pwm.setPWM(servoNr[servoIndex],0,lastPulse[servoIndex]);
-              //Serial.print(servoIndex);
-              //Serial.print(" : ");
-              //Serial.print(_increment);
-              //Serial.print(" : ");
-              //Serial.print(incrementServo[servoIndex]);
-              //Serial.print(" : ");
-              //Serial.print(lastPulse[servoIndex]);
-              //Serial.print(" : ");
-              //Serial.println(pulse[servoIndex]);
-            } // end if
-            if (lastPulse[servoIndex] < pulse[servoIndex]) {
-              if ((pulse[servoIndex] - lastPulse[servoIndex]) < incrementServo[servoIndex]) {
-                  incrementServo[servoIndex] = (pulse[servoIndex] - lastPulse[servoIndex]);
-              } else {
-                incrementServo[servoIndex] = incrementServo[servoIndex];
-              } // end if else
-              lastPulse[servoIndex] += incrementServo[servoIndex];
-			        pwm.setPWM(servoNr[servoIndex],0,lastPulse[servoIndex]);
-              //Serial.print(servoIndex);
-              //Serial.print(" : ");
-              //Serial.print(_increment);
-              //Serial.print(" : ");
-              //Serial.print(incrementServo[servoIndex]);
-              //Serial.print(" : ");
-              //Serial.print(lastPulse[servoIndex]);
-              //Serial.print(" : ");
-              //Serial.println(pulse[servoIndex]);
-            } // end if
-
-          } // end for
-
-  }
-
-
-       if (lastPulse[0] == pulse[0] && lastPulse[1] == pulse[1] && lastPulse[2] == pulse[2]){
-        stepFlag = 1;
-		} else {
-        stepFlag = 0;
-		}
-      return stepFlag;
-
+  } // end if millis
 }
